@@ -21,3 +21,6 @@ prefetcher.o: prefetcher.C prefetcher.h mem-sim.h
 
 clean:
 	rm -f *.o cacheSim
+
+commit:
+	git add *.C
