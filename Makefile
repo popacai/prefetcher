@@ -21,6 +21,7 @@ prefetcher.o: prefetcher.C prefetcher.h mem-sim.h
 
 clean:
 	rm -f *.o cacheSim
+test:
+	bash run_test.sh
+	python analyze_result.py
 
-commit:
-	git add *.C
