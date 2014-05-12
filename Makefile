@@ -26,3 +26,6 @@ test:
 	bash run_test.sh
 	python analyze_result.py
 
+
+run:
+	./cacheSim ls.trace
