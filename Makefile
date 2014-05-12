@@ -21,6 +21,7 @@ prefetcher.o: prefetcher.C prefetcher.h mem-sim.h
 
 clean:
 	rm -f *.o cacheSim
+	rm -f *.trace.out
 test:
 	bash run_test.sh
 	python analyze_result.py
