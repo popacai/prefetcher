@@ -10,10 +10,27 @@
 #ifndef PREFETCHER_H
 #define PREFETCHER_H
 
-#define MAX_QUEUE_SIZE 2000
-
 #include <sys/types.h>
 #include "mem-sim.h"
+
+
+#define MAX_QUEUE_SIZE 10
+
+typedef struct queue_item {
+    u_int32_t addrs;
+    u_int32_t cycle;
+}queue_item_t;
+
+
+class Queue{
+    private:
+        queue_item_t data[MAX_QUEUE_SIZE];
+    public:
+        Queue();
+        int push(queue_item);
+        int pop(queue_item);
+};
+
 class Prefetcher {
   private:
 

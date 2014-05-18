@@ -28,6 +28,9 @@ u_int32_t trim_128(u_int32_t data){
     return data & 0xffffffe0;
 }
 
+Queue::Queue() {
+}
+
 Prefetcher::Prefetcher() {
    _ready = false; 
 }
