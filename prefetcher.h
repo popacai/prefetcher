@@ -20,7 +20,7 @@
 using namespace std;
 
 #define MAX_PREDS_TABLE 1000
-#define PREDICTION_NUM 6
+#define PREDICTION_NUM 4
 typedef struct queue_item {
     u_int32_t addr;
     u_int32_t cycle;
