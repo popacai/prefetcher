@@ -21,18 +21,29 @@
 #include <queue>
 using namespace std;
 
+#define MAX_PREDS_TABLE 1000
+#define PREDICTION_NUM 3
 typedef struct prediction_t {
-    int aa;
+	short nextaddr[PREDICTION_NUM];
+	short count[PREDICTION_NUM];
+    u_int32_t pc;
+    u_int32_t last_access;
 }prediction;
 
 
-class Predicter{
+class Predictor{
     private:
-        int a;//??
+        u_int32_t prev_pc;
+        u_int32_t prev_addr;
+
+        prediction preds[MAX_PREDS_TABLE];
+
     public:
-        void update();
-        void record();
-        void aaaa();
+    	//Every time accessing an address
+    	prediction record(u_int32_t pc, u_int32_t addr, u_int32_t cycle);
+
+    	//update the states inside predictor
+        void update(u_int32_t pc, short diff);
 };
 
 

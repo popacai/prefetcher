@@ -106,7 +106,7 @@ void Prefetcher::cpuRequest(Request req) {
 
 }
 
-void Predicter::update() {
+/*void Predictor::update() {
 }
-void Predicter::record() {
-}
+void Predictor::record() {
+}*/
