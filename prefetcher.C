@@ -49,9 +49,35 @@ int Queue::has_request() {
 }
 
 int Queue::destroy() {
-    while (!(this->data).empty()) {
-        (this->data).pop();
+    queue_item_t item;
+
+    //empty the temp;
+    while (!(this->temp).empty()) {
+        (this->temp).pop();
     }
+
+    while (!(this->data).empty()) {
+        item = (this->data).front();
+        (this->data).pop();
+        temp.push(item);
+    }
+    return 0;
+}
+
+int Queue::recovery() {
+    queue_item_t item;
+
+    while (!(this->temp).empty()) {
+        item = (this->temp).front();
+        (this->temp).pop();
+
+        if ((this->data).size() < 10){
+            (this->data).push(item);
+        }else{
+            continue;
+        }
+    }
+
     return 0;
 }
 
@@ -84,6 +110,20 @@ void Prefetcher::cpuRequest(Request req) {
     queue_item_t q_item;
 
     this->prefetch_queue.destroy();
+
+    int stride;
+
+
+    int max_fetch_number = 7;
+
+    for (stride = 1; stride < max_fetch_number; stride++)
+    {
+        q_item.addr = trim_16(req.addr + stride * 16 + 16);
+        this->prefetch_queue.push(q_item);
+    } 
+    this->prefetch_queue.recovery();
+    return;
+
 
     q_item.addr = trim_16(req.addr + 32);
     this->prefetch_queue.push(q_item);

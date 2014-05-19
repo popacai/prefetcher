@@ -55,12 +55,14 @@ typedef struct queue_item {
 class Queue{
     private:
         queue<queue_item_t> data;
+        queue<queue_item_t> temp;
     public:
         Queue();
         int push(queue_item);
         queue_item_t pop(int index = 0);
         int has_request();
         int destroy();
+        int recovery();
 };
 
 
