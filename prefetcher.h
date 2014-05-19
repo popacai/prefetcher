@@ -64,6 +64,7 @@ class Prefetcher {
     //Fill the map?
     //
     Queue prefetch_queue;
+    Predicter predicter;
 
   public:
 	Prefetcher();
