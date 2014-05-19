@@ -33,6 +33,9 @@ Queue::Queue() {
 }
 
 int Queue::push(queue_item_t item) {
+    if (this->data.size() > MAX_QUEUE_SIZE){
+        return 1; // error 
+    }
     this->data.push(item);
     return 0;
 }
@@ -71,7 +74,7 @@ int Queue::recovery() {
         item = (this->temp).front();
         (this->temp).pop();
 
-        if ((this->data).size() < 10){
+        if ((this->data).size() < MAX_QUEUE_SIZE){
             (this->data).push(item);
         }else{
             continue;
@@ -113,14 +116,22 @@ void Prefetcher::cpuRequest(Request req) {
 
     int stride;
 
+    queue_item_t q_items[10];
+    int count;
+    count = this->predicter.record(req.pc, req.addr, req.issuedAt, (q_items));
 
+    int i;
+    for (i = 0; i < (count - 1); i++){
+        this->prefetch_queue.push(q_items[i]);
+    }
+    /*
     int max_fetch_number = 7;
-
     for (stride = 1; stride < max_fetch_number; stride++)
     {
         q_item.addr = trim_16(req.addr + stride * 16 + 16);
         this->prefetch_queue.push(q_item);
     } 
+    */
     this->prefetch_queue.recovery();
     return;
 
@@ -145,6 +156,17 @@ void Prefetcher::cpuRequest(Request req) {
         //_ready = true;
     //}
 
+}
+
+int Predictor::record(u_int32_t pc, u_int32_t addr, u_int32_t cycle, queue_item_t* q_items) {
+
+    int stride;
+    int max_fetch_number = 7;
+    for (stride = 1; stride < max_fetch_number; stride++){
+        (q_items[stride - 1]).addr = trim_16(addr + stride * 16 + 16);
+    }
+    return stride;
+    
 }
 
 /*void Predictor::update() {

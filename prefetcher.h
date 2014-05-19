@@ -21,12 +21,22 @@ using namespace std;
 
 #define MAX_PREDS_TABLE 1000
 #define PREDICTION_NUM 6
+typedef struct queue_item {
+    u_int32_t addr;
+    u_int32_t cycle;
+}queue_item_t;
+
 typedef struct prediction_t {
 	short nextaddr[PREDICTION_NUM];
 	short count[PREDICTION_NUM];
     u_int32_t pc;
     u_int32_t last_access;
 }prediction;
+
+//size of (prediction) = (2 + 2) * PREDICTION_NUM + 4 + 4 
+//4 * PREDICTION_NUM + 4 + 4 = 32 Bytes
+
+//39KB / 32
 
 
 class Predictor{
@@ -38,7 +48,7 @@ class Predictor{
 
     public:
     	//Every time accessing an address
-    	prediction record(u_int32_t pc, u_int32_t addr, u_int32_t cycle);
+    	int record(u_int32_t pc, u_int32_t addr, u_int32_t cycle, queue_item_t* q_items);
 
     	//update the states inside predictor
         void update(u_int32_t pc, short diff);
@@ -46,16 +56,13 @@ class Predictor{
 
 
 
-typedef struct queue_item {
-    u_int32_t addr;
-    u_int32_t cycle;
-}queue_item_t;
 
+//4 * MAX_QUEUE_SIZE = 40 * 2 = 80 Bytes
 
 class Queue{
     private:
-        queue<queue_item_t> data;
-        queue<queue_item_t> temp;
+        queue<queue_item_t> data; // MAX_QUEUE_SIZE
+        queue<queue_item_t> temp; // MAX_QUEUE_SIZE, only for swap
     public:
         Queue();
         int push(queue_item);
