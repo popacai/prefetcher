@@ -14,8 +14,6 @@
 #include "mem-sim.h"
 
 
-#ifndef QUEUE_H
-#define QUEUE_H
 
 #define MAX_QUEUE_SIZE 10
 #include <queue>
@@ -58,15 +56,16 @@ typedef struct queue_item {
 class Queue{
     private:
         queue<queue_item_t> data;
+        queue<queue_item_t> temp;
     public:
         Queue();
         int push(queue_item);
         queue_item_t pop(int index = 0);
         int has_request();
         int destroy();
+        int recovery();
 };
 
-#endif
 
 class Prefetcher {
   private:
