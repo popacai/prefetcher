@@ -181,6 +181,7 @@ Predictor::Predictor()
 }
 
 
+
 int Predictor::record(u_int32_t pc, u_int32_t addr, u_int32_t cycle, queue_item_t* q_items) {
 
     long diff;
@@ -190,11 +191,14 @@ int Predictor::record(u_int32_t pc, u_int32_t addr, u_int32_t cycle, queue_item_
         diff = 0;
     }
 
+    prediction* p; //p value
+
     if (this->prev_pc == 0) {
         //pass
     }else{
         //this->update(prev_pc, diff, cycle);
     }
+
 
     //update previous addr and pc
     this->prev_pc = pc;
