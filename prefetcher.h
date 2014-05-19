@@ -14,22 +14,31 @@
 #include "mem-sim.h"
 
 
+#ifndef QUEUE_H
+#define QUEUE_H
+
 #define MAX_QUEUE_SIZE 10
+#include <queue>
+using namespace std;
 
 typedef struct queue_item {
-    u_int32_t addrs;
+    u_int32_t addr;
     u_int32_t cycle;
 }queue_item_t;
 
 
 class Queue{
     private:
-        queue_item_t data[MAX_QUEUE_SIZE];
+        queue<queue_item_t> data;
     public:
         Queue();
         int push(queue_item);
-        int pop(queue_item);
+        queue_item_t pop(int index = 0);
+        int has_request();
+        int destroy();
 };
+
+#endif
 
 class Prefetcher {
   private:
@@ -38,6 +47,7 @@ class Prefetcher {
 	Request _nextReq;
     //Fill the map?
     //
+    Queue prefetch_queue;
 
   public:
 	Prefetcher();

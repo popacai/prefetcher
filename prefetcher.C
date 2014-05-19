@@ -29,42 +29,79 @@ u_int32_t trim_128(u_int32_t data){
 }
 
 Queue::Queue() {
+    //pass
+}
+
+int Queue::push(queue_item_t item) {
+    this->data.push(item);
+}
+
+queue_item_t Queue::pop(int index) {
+    queue_item_t item;
+    item = (queue_item_t)this->data.front();
+    this->data.pop();
+    return item;
+}
+
+int Queue::has_request() {
+    return (!this->data.empty());
+}
+
+int Queue::destroy() {
+    while (!(this->data).empty()) {
+        (this->data).pop();
+    }
+    return 0;
 }
 
 Prefetcher::Prefetcher() {
    _ready = false; 
 }
 bool Prefetcher::hasRequest(u_int32_t cycle) { 
-    return _ready; 
+    _ready =  (this->prefetch_queue).has_request();
+    return _ready;
 }
 
 Request Prefetcher::getRequest(u_int32_t cycle) { 
-    return _nextReq; 
+    Request req;
+    queue_item q_item;
+    //u_int32_t addr;
+
+    //req.fromCPU = 0;
+
+    q_item = this->prefetch_queue.pop();
+    req.addr = q_item.addr;
+    return req;
 }
 
 void Prefetcher::completeRequest(u_int32_t cycle) { 
-    _ready = false; 
+    //_ready = false;
+    //return this->prefetch_queue.has_request();
 }
 
 void Prefetcher::cpuRequest(Request req) { 
-    /*
-    if (!req.HitL1){
-        printf("-----------------------------------\n");
-        printf("addr=%u\n", req.addr);
-        printf("pc=%u\n", req.pc);
-        printf("load=%u\n", req.load);
-        printf("fromCPU=%u\n", req.fromCPU);
-        printf("issueAt=%u\n", req.issuedAt);
-        printf("HitL1=%u\n", req.HitL1);
-        printf("HitL2=%u\n", req.HitL2);
-    }
-    */
-    //add the pc
+    queue_item_t q_item;
+
+    this->prefetch_queue.destroy();
+
+    q_item.addr = trim_16(req.addr + 32);
+    this->prefetch_queue.push(q_item);
+    q_item.addr = trim_16(req.addr + 32 + 16);
+    this->prefetch_queue.push(q_item);
+    q_item.addr = trim_16(req.addr + 32 + 32);
+    this->prefetch_queue.push(q_item);
+    q_item.addr = trim_16(req.addr + 32 + 32 + 16);
+    this->prefetch_queue.push(q_item);
+    q_item.addr = trim_16(req.addr + 32 + 32 + 32);
+    this->prefetch_queue.push(q_item);
+    q_item.addr = trim_16(req.addr + 32 + 32 + 32 + 16);
+    this->prefetch_queue.push(q_item);
+    q_item.addr = trim_16(req.addr + 32 + 32 + 32 + 32);
+    this->prefetch_queue.push(q_item);
 
     //if (!_ready) {
-    {
-        _nextReq.addr = req.addr + 64;
-        _ready = true;
-    }
+        //_nextReq.addr = req.addr + 64;
+        //_ready = true;
+    //}
 
 }
