@@ -21,6 +21,22 @@
 #include <queue>
 using namespace std;
 
+typedef struct prediction_t {
+    int aa;
+}prediction;
+
+
+class Predicter{
+    private:
+        int a;//??
+    public:
+        void update();
+        void record();
+        void aaaa();
+};
+
+
+
 typedef struct queue_item {
     u_int32_t addr;
     u_int32_t cycle;
