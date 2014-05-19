@@ -52,7 +52,7 @@ class Predictor{
     	int record(u_int32_t pc, u_int32_t addr, u_int32_t cycle, queue_item_t* q_items);
 
     	//update the states inside predictor
-        void update(u_int32_t pc, short diff, u_int32_t cycle);
+        prediction*  update(u_int32_t pc, short diff, u_int32_t cycle);
 };
 
 

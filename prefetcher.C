@@ -212,7 +212,7 @@ int Predictor::record(u_int32_t pc, u_int32_t addr, u_int32_t cycle, queue_item_
     return stride;
 }
 
-void Predictor::update(u_int32_t pc, short diff, u_int32_t cycle)
+prediction* Predictor::update(u_int32_t pc, short diff, u_int32_t cycle)
 {
     int i,j,appeared;
     int tokick = 0;
@@ -247,8 +247,8 @@ void Predictor::update(u_int32_t pc, short diff, u_int32_t cycle)
 
         for (j = 1; j < PREDICTION_NUM; j++)
         {
-            preds[i].nextaddr[i] = 0;
-            preds[i].count[i] = 0;
+            preds[i].nextaddr[j] = 0;
+            preds[i].count[j] = 0;
         }
     }
 
@@ -261,28 +261,30 @@ void Predictor::update(u_int32_t pc, short diff, u_int32_t cycle)
         for (j = 0; j < PREDICTION_NUM; j++)
         {
             // this entry is this address
-            if (preds[i].nextaddr[i] == diff)
+            if (preds[i].nextaddr[j] == diff)
             {
-                preds[i].count[i]++;
+                preds[i].count[j]++;
                 appeared = 1;
             }
         }
         for (j = 0; j < PREDICTION_NUM; j++)
         {
            //replace the entry with the address
-            if (preds[i].count[i] == 0 && !appeared)
+            if (preds[i].count[j] == 0 && !appeared)
             {
-                preds[i].nextaddr[i] = diff;
-                preds[i].count[i] = 1;
+                preds[i].nextaddr[j] = diff;
+                preds[i].count[j] = 1;
                 appeared = 1;
             }
             //decrease the count of other addresses
             else
             {
-                preds[i].count[i]--;
+                preds[i].count[j]--;
             }
         }
     }
+
+    return &preds[i];
 }  
 
 
