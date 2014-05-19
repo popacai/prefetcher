@@ -167,7 +167,7 @@ void Prefetcher::cpuRequest(Request req) {
 
 Predictor::Predictor()
 {
-    int i;
+    int i, j;
     for (i=0; i<MAX_PREDS_TABLE; i++)
     {
         memset(&(preds[i]), 0, sizeof(prediction));
@@ -175,6 +175,9 @@ Predictor::Predictor()
         preds[i].pc = 0;
         preds[i].last_access = 0;
         */
+        for (j = 0; j < PREDICTION_NUM; j++){
+            preds[i].nextaddr[j] = (PREDICTION_NUM - j) * 32;
+        }
     }
     this->prev_pc = 0;
     this->prev_addr = 0;
@@ -191,25 +194,84 @@ int Predictor::record(u_int32_t pc, u_int32_t addr, u_int32_t cycle, queue_item_
         diff = 0;
     }
 
+    if (diff >= 128 || diff <= -128){
+        //diff = +30001;
+        diff = 0;
+    }
+
     prediction* p; //p value
+    p = 0;
 
     if (this->prev_pc == 0) {
         //pass
+
     }else{
-        //this->update(prev_pc, diff, cycle);
+        p = this->update(prev_pc, (short)diff, cycle);
+
+        /*
+        printf("%x\n", p->pc);
+        int i;
+        printf("\n-------------\npc  =%x\n", p->pc);
+        printf("last=%x\n", p->last_access);
+        printf("nextaddr=");
+        for (i = 0; i < PREDICTION_NUM; i++){
+            printf("%d,", p->nextaddr[i]);
+        }
+        printf("\n");
+        printf("count=");
+        for (i = 0; i < PREDICTION_NUM; i++){
+            printf("%d,", p->count[i]);
+        }
+        printf("\n");
+        */
     }
 
-
-    //update previous addr and pc
     this->prev_pc = pc;
     this->prev_addr = addr;
 
-    int stride;
-    int max_fetch_number = 4;
-    for (stride = 1; stride < max_fetch_number; stride++){
-        (q_items[stride - 1]).addr = addr + stride * 32 ;
+    p = 0;
+    //update previous addr and pc
+    int max_fetch_number;
+    if (p)
+    {
+        int it;
+        max_fetch_number = 3;
+        for (it = 0; it< max_fetch_number; it++){
+            if (p->nextaddr[it] != 0){
+                (q_items[it]).addr = addr + p->nextaddr[it];
+            }else{
+                (q_items[it]).addr = addr + p->nextaddr[it + 1];
+            }
+        }
+        return it + 1;
+    }else{
+        int stride;
+        max_fetch_number = 4;
+        for (stride = 1; stride < max_fetch_number; stride++){
+            (q_items[stride - 1]).addr = addr + stride * 32 ;
+        }
+        return stride;
     }
-    return stride;
+}
+
+int sort(prediction* t){
+    short* nextaddr;
+    short* count;
+    nextaddr = t->nextaddr;
+    count = t->count;
+
+    int i, j;
+    short tmp;
+    for (i = 0; i < (PREDICTION_NUM - 1); i++){
+        for (j = i; j < PREDICTION_NUM; j++){
+            if (count[i] < count[j]){
+                tmp = count[i];
+                count[i] = count[j];
+                count[j] = tmp;
+            }
+        }
+    }
+    return 0;
 }
 
 prediction* Predictor::update(u_int32_t pc, short diff, u_int32_t cycle)
@@ -243,11 +305,12 @@ prediction* Predictor::update(u_int32_t pc, short diff, u_int32_t cycle)
         preds[i].pc = pc;
         preds[i].last_access = cycle;
         preds[i].nextaddr[0] = diff;
-        preds[i].count[0] = 0;
+        preds[i].count[0] = 1;
 
         for (j = 1; j < PREDICTION_NUM; j++)
         {
-            preds[i].nextaddr[j] = 0;
+            //preds[i].nextaddr[j] = 32 * (PREDICTION_NUM - j);
+            preds[i].nextaddr[j] = 32 * (j);
             preds[i].count[j] = 0;
         }
     }
@@ -263,7 +326,9 @@ prediction* Predictor::update(u_int32_t pc, short diff, u_int32_t cycle)
             // this entry is this address
             if (preds[i].nextaddr[j] == diff)
             {
-                preds[i].count[j]++;
+                if (preds[i].count[j] < 30000){
+                    preds[i].count[j]++;
+                }
                 appeared = 1;
             }
         }
@@ -279,12 +344,33 @@ prediction* Predictor::update(u_int32_t pc, short diff, u_int32_t cycle)
             //decrease the count of other addresses
             else
             {
-                preds[i].count[j]--;
+                if (preds[i].count[j] > -30000){
+                    preds[i].count[j]--;
+                }
             }
         }
     }
+    sort(&preds[i]);
+    prediction* p;
+    p = &preds[i];
 
-    return &preds[i];
+    /*
+    printf("\n-------------\npc  =%x\n", p->pc);
+    printf("\n-------------\nlast=%x\n", p->last_access);
+    printf("nextaddr=");
+    for (i = 0; i < PREDICTION_NUM; i++){
+        printf("%x,", p->nextaddr[i]);
+    }
+    printf("\n");
+    printf("count=");
+    for (i = 0; i < PREDICTION_NUM; i++){
+        printf("%d,", p->count[i]);
+    }
+    printf("\n");
+    */
+
+
+    return &(preds[i]);
 }  
 
 
