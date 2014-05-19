@@ -34,6 +34,7 @@ Queue::Queue() {
 
 int Queue::push(queue_item_t item) {
     this->data.push(item);
+    return 0;
 }
 
 queue_item_t Queue::pop(int index) {
