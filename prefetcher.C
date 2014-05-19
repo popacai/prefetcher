@@ -66,26 +66,148 @@ int Queue::destroy() {
     }
     return 0;
 }
+/*Predictor::record(u_int32_t pc, u_int32_t addr, u_int32_t cycle)
+{
+
+}*/
+int Queue::recovery() {
+    queue_item_t item;
+
+    while (!(this->temp).empty()) {
+        item = (this->temp).front();
+        (this->temp).pop();
+
+        if ((this->data).size() < MAX_QUEUE_SIZE){
+            (this->data).push(item);
+        }else{
+            continue;
+        }
+    }
+
+    return 0;
+}
+
+Prefetcher::Prefetcher() {
+   _ready = false; 
+}
+bool Prefetcher::hasRequest(u_int32_t cycle) { 
+    _ready =  (this->prefetch_queue).has_request();
+    return _ready;
+}
+
+Request Prefetcher::getRequest(u_int32_t cycle) { 
+    Request req;
+    queue_item q_item;
+    //u_int32_t addr;
+
+    //req.fromCPU = 0;
+
+    q_item = this->prefetch_queue.pop();
+    req.addr = q_item.addr;
+    return req;
+}
+
+void Prefetcher::completeRequest(u_int32_t cycle) { 
+    //_ready = false;
+    //return this->prefetch_queue.has_request();
+}
+
+void Prefetcher::cpuRequest(Request req) { 
+    queue_item_t q_item;
+
+    this->prefetch_queue.destroy();
+
+    int stride;
+
+    queue_item_t q_items[10];
+    int count;
+    count = this->predictor.record(req.pc, req.addr, req.issuedAt, (q_items));
+
+    int i;
+    for (i = 0; i < (count - 1); i++){
+        this->prefetch_queue.push(q_items[i]);
+    }
+    /*
+    int max_fetch_number = 7;
+    for (stride = 1; stride < max_fetch_number; stride++)
+    {
+        q_item.addr = trim_16(req.addr + stride * 16 + 16);
+        this->prefetch_queue.push(q_item);
+    } 
+    */
+    this->prefetch_queue.recovery();
+    return;
+
+
+    q_item.addr = trim_16(req.addr + 32);
+    this->prefetch_queue.push(q_item);
+    q_item.addr = trim_16(req.addr + 32 + 16);
+    this->prefetch_queue.push(q_item);
+    q_item.addr = trim_16(req.addr + 32 + 32);
+    this->prefetch_queue.push(q_item);
+    q_item.addr = trim_16(req.addr + 32 + 32 + 16);
+    this->prefetch_queue.push(q_item);
+    q_item.addr = trim_16(req.addr + 32 + 32 + 32);
+    this->prefetch_queue.push(q_item);
+    q_item.addr = trim_16(req.addr + 32 + 32 + 32 + 16);
+    this->prefetch_queue.push(q_item);
+    q_item.addr = trim_16(req.addr + 32 + 32 + 32 + 32);
+    this->prefetch_queue.push(q_item);
+
+    //if (!_ready) {
+        //_nextReq.addr = req.addr + 64;
+        //_ready = true;
+    //}
+
+}
 
 Predictor::Predictor()
 {
     int i;
     for (i=0; i<MAX_PREDS_TABLE; i++)
     {
+        memset(&(preds[i]), 0, sizeof(prediction));
+        /*
         preds[i].pc = 0;
         preds[i].last_access = 0;
+        */
     }
+    this->prev_pc = 0;
+    this->prev_addr = 0;
 }
 
-/*Predictor::record(u_int32_t pc, u_int32_t addr, u_int32_t cycle)
-{
 
-}*/
+int Predictor::record(u_int32_t pc, u_int32_t addr, u_int32_t cycle, queue_item_t* q_items) {
+
+    long diff;
+
+    diff = addr - this->prev_addr;
+    if (this->prev_addr == 0){
+        diff = 0;
+    }
+
+    if (this->prev_pc == 0) {
+        //pass
+    }else{
+        this->update(prev_pc, diff, cycle);
+    }
+
+    //update previous addr and pc
+    this->prev_pc = pc;
+    this->prev_addr = addr;
+
+    int stride;
+    int max_fetch_number = 7;
+    for (stride = 1; stride < max_fetch_number; stride++){
+        (q_items[stride - 1]).addr = trim_16(addr + stride * 16 + 16);
+    }
+    return stride;
+}
 
 void Predictor::update(u_int32_t pc, short diff, u_int32_t cycle)
 {
     int i,j,appeared;
-    int tokick = -1;
+    int tokick = 0;
     int tochange = -1;
 
     //Find the positions
@@ -155,107 +277,6 @@ void Predictor::update(u_int32_t pc, short diff, u_int32_t cycle)
     }
 }  
 
-int Queue::recovery() {
-    queue_item_t item;
-
-    while (!(this->temp).empty()) {
-        item = (this->temp).front();
-        (this->temp).pop();
-
-        if ((this->data).size() < MAX_QUEUE_SIZE){
-            (this->data).push(item);
-        }else{
-            continue;
-        }
-    }
-
-    return 0;
-}
-
-Prefetcher::Prefetcher() {
-   _ready = false; 
-}
-bool Prefetcher::hasRequest(u_int32_t cycle) { 
-    _ready =  (this->prefetch_queue).has_request();
-    return _ready;
-}
-
-Request Prefetcher::getRequest(u_int32_t cycle) { 
-    Request req;
-    queue_item q_item;
-    //u_int32_t addr;
-
-    //req.fromCPU = 0;
-
-    q_item = this->prefetch_queue.pop();
-    req.addr = q_item.addr;
-    return req;
-}
-
-void Prefetcher::completeRequest(u_int32_t cycle) { 
-    //_ready = false;
-    //return this->prefetch_queue.has_request();
-}
-
-void Prefetcher::cpuRequest(Request req) { 
-    queue_item_t q_item;
-
-    this->prefetch_queue.destroy();
-
-    int stride;
-
-    queue_item_t q_items[10];
-    int count;
-    count = this->predicter.record(req.pc, req.addr, req.issuedAt, (q_items));
-
-    int i;
-    for (i = 0; i < (count - 1); i++){
-        this->prefetch_queue.push(q_items[i]);
-    }
-    /*
-    int max_fetch_number = 7;
-    for (stride = 1; stride < max_fetch_number; stride++)
-    {
-        q_item.addr = trim_16(req.addr + stride * 16 + 16);
-        this->prefetch_queue.push(q_item);
-    } 
-    */
-    this->prefetch_queue.recovery();
-    return;
-
-
-    q_item.addr = trim_16(req.addr + 32);
-    this->prefetch_queue.push(q_item);
-    q_item.addr = trim_16(req.addr + 32 + 16);
-    this->prefetch_queue.push(q_item);
-    q_item.addr = trim_16(req.addr + 32 + 32);
-    this->prefetch_queue.push(q_item);
-    q_item.addr = trim_16(req.addr + 32 + 32 + 16);
-    this->prefetch_queue.push(q_item);
-    q_item.addr = trim_16(req.addr + 32 + 32 + 32);
-    this->prefetch_queue.push(q_item);
-    q_item.addr = trim_16(req.addr + 32 + 32 + 32 + 16);
-    this->prefetch_queue.push(q_item);
-    q_item.addr = trim_16(req.addr + 32 + 32 + 32 + 32);
-    this->prefetch_queue.push(q_item);
-
-    //if (!_ready) {
-        //_nextReq.addr = req.addr + 64;
-        //_ready = true;
-    //}
-
-}
-
-int Predictor::record(u_int32_t pc, u_int32_t addr, u_int32_t cycle, queue_item_t* q_items) {
-
-    int stride;
-    int max_fetch_number = 7;
-    for (stride = 1; stride < max_fetch_number; stride++){
-        (q_items[stride - 1]).addr = trim_16(addr + stride * 16 + 16);
-    }
-    return stride;
-    
-}
 
 /*void Predictor::update() {
 }
