@@ -14,8 +14,6 @@
 #include "mem-sim.h"
 
 
-#ifndef QUEUE_H
-#define QUEUE_H
 
 #define MAX_QUEUE_SIZE 10
 #include <queue>
@@ -65,7 +63,6 @@ class Queue{
         int destroy();
 };
 
-#endif
 
 class Prefetcher {
   private:
