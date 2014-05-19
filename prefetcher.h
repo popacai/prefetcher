@@ -20,7 +20,7 @@
 using namespace std;
 
 #define MAX_PREDS_TABLE 1000
-#define PREDICTION_NUM 3
+#define PREDICTION_NUM 6
 typedef struct prediction_t {
 	short nextaddr[PREDICTION_NUM];
 	short count[PREDICTION_NUM];
