@@ -55,6 +55,94 @@ int Queue::destroy() {
     return 0;
 }
 
+Predictor::Predictor()
+{
+    int i;
+    for (i=0; i<MAX_PREDS_TABLE; i++)
+    {
+        preds[i].pc = 0;
+        preds[i].last_access = 0;
+    }
+}
+
+/*Predictor::record(u_int32_t pc, u_int32_t addr, u_int32_t cycle)
+{
+
+}*/
+
+void Predictor::update(u_int32_t pc, short diff, u_int32_t cycle)
+{
+    int i,j,appeared;
+    int tokick = -1;
+    int tochange = -1;
+
+    //Find the positions
+    u_int32_t min = 0xffffffff;
+    for (i=0; i<MAX_PREDS_TABLE; i++)
+    {
+        //Found the pc.
+        if (preds[i].pc == pc)
+        {
+            tochange = i;
+        }
+
+        //If pc not found, then the entry to be replaced
+        if (preds[i].last_access < min)
+        {
+            min = preds[i].last_access;
+            tokick = i;
+        }
+
+    }
+
+    if (tochange == -1) //insert new node
+    {
+        i = tokick;
+        preds[i].pc = pc;
+        preds[i].last_access = cycle;
+        preds[i].nextaddr[0] = diff;
+        preds[i].count[0] = 0;
+
+        for (j = 1; j < PREDICTION_NUM; j++)
+        {
+            preds[i].nextaddr[i] = 0;
+            preds[i].count[i] = 0;
+        }
+    }
+
+    else // update on an existing node
+    {
+        i = tochange;
+        preds[i].last_access = cycle;
+
+        appeared = 0; // if diff already appears in the list
+        for (j = 0; j < PREDICTION_NUM; j++)
+        {
+            // this entry is this address
+            if (preds[i].nextaddr[i] == diff)
+            {
+                preds[i].count[i]++;
+                appeared = 1;
+            }
+        }
+        for (j = 0; j < PREDICTION_NUM; j++)
+        {
+           //replace the entry with the address
+            if (preds[i].count[i] == 0 && !appeared)
+            {
+                preds[i].nextaddr[i] = diff;
+                preds[i].count[i] = 1;
+                appeared = 1;
+            }
+            //decrease the count of other addresses
+            else
+            {
+                preds[i].count[i]--;
+            }
+        }
+    }
+}  
+
 Prefetcher::Prefetcher() {
    _ready = false; 
 }
@@ -106,8 +194,3 @@ void Prefetcher::cpuRequest(Request req) {
     //}
 
 }
-
-/*void Predictor::update() {
-}
-void Predictor::record() {
-}*/

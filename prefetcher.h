@@ -22,7 +22,7 @@
 using namespace std;
 
 #define MAX_PREDS_TABLE 1000
-#define PREDICTION_NUM 3
+#define PREDICTION_NUM 6
 typedef struct prediction_t {
 	short nextaddr[PREDICTION_NUM];
 	short count[PREDICTION_NUM];
@@ -39,11 +39,12 @@ class Predictor{
         prediction preds[MAX_PREDS_TABLE];
 
     public:
+    	Predictor();
     	//Every time accessing an address
     	prediction record(u_int32_t pc, u_int32_t addr, u_int32_t cycle);
 
     	//update the states inside predictor
-        void update(u_int32_t pc, short diff);
+        void update(u_int32_t pc, short diff, u_int32_t cycle);
 };
 
 
@@ -75,7 +76,7 @@ class Prefetcher {
     //Fill the map?
     //
     Queue prefetch_queue;
-    Predicter predicter;
+    Predictor predictor;
 
   public:
 	Prefetcher();
