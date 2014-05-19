@@ -121,6 +121,10 @@ void Prefetcher::cpuRequest(Request req) {
 
     queue_item_t q_items[10];
     int count;
+
+    req.addr = trim_16(req.addr);
+
+
     count = this->predictor.record(req.pc, req.addr, req.issuedAt, (q_items));
 
     int i;
@@ -189,7 +193,7 @@ int Predictor::record(u_int32_t pc, u_int32_t addr, u_int32_t cycle, queue_item_
     if (this->prev_pc == 0) {
         //pass
     }else{
-        this->update(prev_pc, diff, cycle);
+        //this->update(prev_pc, diff, cycle);
     }
 
     //update previous addr and pc
@@ -197,9 +201,9 @@ int Predictor::record(u_int32_t pc, u_int32_t addr, u_int32_t cycle, queue_item_
     this->prev_addr = addr;
 
     int stride;
-    int max_fetch_number = 7;
+    int max_fetch_number = 4;
     for (stride = 1; stride < max_fetch_number; stride++){
-        (q_items[stride - 1]).addr = trim_16(addr + stride * 16 + 16);
+        (q_items[stride - 1]).addr = addr + stride * 32 ;
     }
     return stride;
 }
