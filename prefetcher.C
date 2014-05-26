@@ -329,13 +329,8 @@ void Prefetcher::cpuRequest(Request req) {
         this->prefetch_queue.recovery();
         return;
     } else {
-        printf("123\n");
         return;
     }
-    //if (!_ready) {
-        //_nextReq.addr = req.addr + 64;
-        //_ready = true;
-    //}
 
 }
 

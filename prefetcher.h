@@ -65,14 +65,19 @@ class Predictor{
 
 
 #define MAX_HISTORY_SIZE 40
+#define CPU_HISTROY_SIZE 20
+
+#define BLOCK_L2 256 * 1024;
+#define BLOCK_L1 64 * 1024
 class HistoryLog{
     private:
         int pos;
         u_int32_t addrs[MAX_HISTORY_SIZE];
+        u_int32_t cpu_addrs[CPU_HISTROY_SIZE];
     public:
         HistoryLog();
         int add_new(u_int32_t addr);
-            
+        int add_cpu(u_int32_t addr);
 };
 
 
