@@ -15,7 +15,7 @@
 
 
 
-#define MAX_QUEUE_SIZE 20 
+#define MAX_QUEUE_SIZE 10
 #include <queue>
 using namespace std;
 
@@ -64,6 +64,18 @@ class Predictor{
 };
 
 
+#define MAX_HISTORY_SIZE 40
+class HistoryLog{
+    private:
+        int pos;
+        u_int32_t addrs[MAX_HISTORY_SIZE];
+    public:
+        HistoryLog();
+        int add_new(u_int32_t addr);
+            
+};
+
+
 
 
 //4 * MAX_QUEUE_SIZE = 40 * 2 = 80 Bytes
@@ -102,6 +114,8 @@ class Prefetcher {
     u_int32_t mem_start_time[MAX_HEALTH_COUNT];
     u_int32_t mem_end_time[MAX_HEALTH_COUNT];
     u_int32_t avg_prefetch_time;
+
+    HistoryLog history;
   public:
 	Prefetcher();
 

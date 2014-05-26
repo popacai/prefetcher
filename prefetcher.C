@@ -12,7 +12,7 @@
 #include <stdio.h>
 #include <memory.h>
 
-int static_stride_list[15] = {1, -1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+int static_stride_list[20] = {1, -1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19};
 
 u_int32_t trim_16(u_int32_t data){
     return data & 0xfffffff0;
@@ -29,6 +29,28 @@ u_int32_t trim_64(u_int32_t data){
 u_int32_t trim_128(u_int32_t data){
     return data & 0xffffffe0;
 }
+
+HistoryLog::HistoryLog(){
+    this->pos = 0;
+    memset(this->addrs, 0, sizeof(u_int32_t) * MAX_HISTORY_SIZE);
+}
+
+int HistoryLog::add_new(u_int32_t addr){
+    int i;
+    for (i = 0; i < MAX_HISTORY_SIZE; i++){
+        if (addr == this->addrs[i]){
+            return -1;
+        }
+    }
+    this->addrs[pos] = addr;
+
+    pos++;
+    if (pos >= MAX_HISTORY_SIZE){
+        pos = 0;
+    }
+    return 0;
+}
+
 
 Queue::Queue() {
     //pass
@@ -191,13 +213,15 @@ void Prefetcher::cpuRequest(Request req) {
     addr = req.addr;
     cycle = req.issuedAt;
 
+    //this->history.add_new(req.addr);
+
     if (req.fromCPU == true) {
         this->prefetch_queue.destroy();
 
         int stride;
 
-        queue_item_t q_items[10];
-        memset(q_items, 0, 10 * sizeof(queue_item_t));
+        queue_item_t q_items[20];
+        memset(q_items, 0, 20 * sizeof(queue_item_t));
         queue_item_t temp_item;
         int count;
 
@@ -217,8 +241,10 @@ void Prefetcher::cpuRequest(Request req) {
         int b_found;
         b_found = 0;
         u_int32_t temp_addr;
+        int fetch_from_mem = 0;
         if (req.HitL1) {
             max_fetch_number = 7;
+            fetch_from_mem = 1;
                         /*
             q_items[stride++].addr = addr + 32;
             q_items[stride++].addr = addr - 32;
@@ -258,6 +284,9 @@ void Prefetcher::cpuRequest(Request req) {
         }
 
         for (;stride < max_fetch_number;){
+                if (step > 19){
+                    break;
+                }
                 temp_addr = addr + 32 * static_stride_list[step];
                 b_found = 0;
                 for (i = 0; i < max_fetch_number; i++){
@@ -265,6 +294,12 @@ void Prefetcher::cpuRequest(Request req) {
                         b_found = 1;
                     }
                 }
+
+                /*
+                    if (this->history.add_new(temp_addr)){
+                        b_found = 1;
+                    }
+                    */
                 if (!b_found){
                     q_items[stride].addr = temp_addr;
                     stride++;
@@ -272,11 +307,15 @@ void Prefetcher::cpuRequest(Request req) {
                 step++;
             }
 
-
-
         count = stride;
 
         for (i = 0; i < (count - 1); i++){
+            if (fetch_from_mem)
+            {
+                if (this->history.add_new(q_items[i].addr)){
+                    continue;
+                }
+            }
             this->prefetch_queue.push(q_items[i]);
         }
         /*
