@@ -15,6 +15,8 @@
 int static_stride_list[20] = {1, -1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19};
 
 u_int32_t trim_16(u_int32_t data){
+    data = data / 16 * 16;
+    return data;
     return data & 0xfffffff0;
 }
 
@@ -35,7 +37,18 @@ HistoryLog::HistoryLog(){
     memset(this->addrs, 0, sizeof(u_int32_t) * MAX_HISTORY_SIZE);
 }
 
+int HistoryLog::check_addr(u_int32_t addr){
+    int i;
+    for (i = 0; i < MAX_HISTORY_SIZE; i++){
+        if ((addr % (32 * 1024)) == (this->addrs[i] % (32 * 1024))){
+            return -1;
+        }
+    }
+    return 0;
+
+}
 int HistoryLog::add_new(u_int32_t addr){
+    //addr = (addr / 32 + 1) * 32; 
     int i;
     for (i = 0; i < MAX_HISTORY_SIZE; i++){
         if (addr == this->addrs[i]){
@@ -51,6 +64,16 @@ int HistoryLog::add_new(u_int32_t addr){
     return 0;
 }
 
+int HistoryLog::remove_addr(u_int32_t addr){
+    int i;
+    for (i = 0; i < MAX_HISTORY_SIZE; i++){
+        if (addr == this->addrs[i]){
+            this->addrs[i] = 0;
+            return 1;
+        }
+    }
+    return 0;
+}
 
 Queue::Queue() {
     //pass
@@ -94,38 +117,53 @@ int Queue::destroy() {
 {
 
 }*/
-int Queue::recovery() {
+queue<queue_item_t> Queue::recovery() {
     queue_item_t item;
+
+    u_int32_t current_cycle;
+    current_cycle = this->data.front().cycle;
 
     while (!(this->temp).empty()) {
         item = (this->temp).front();
-        (this->temp).pop();
+
+        /*
+        if ((item.cycle - current_cycle) > 1){
+            (this->temp).pop();
+            continue;
+        }
+        */
 
         if ((this->data).size() < MAX_QUEUE_SIZE){
             (this->data).push(item);
         }else{
-            continue;
+            break;
         }
+
+        (this->temp).pop();
     }
 
-    return 0;
+    return this->temp;
 }
 
 Prefetcher::Prefetcher() {
     int i;
+    /*
     for (i = 0; i < MAX_HEALTH_COUNT; i++) {
         this->mem_start_time[i] = 0;
         this->mem_end_time[i] = 0;
     }
     this->mem_start_pos = 0;
     this->mem_end_pos = 0;
+    */
    _ready = false; 
 }
 bool Prefetcher::hasRequest(u_int32_t cycle) { 
+    /*
     queue_item q_temp;
     u_int64_t sum;
     u_int32_t avg_pending;
     sum = 0;
+
 
     int i;
     int count;
@@ -146,6 +184,7 @@ bool Prefetcher::hasRequest(u_int32_t cycle) {
     }
 
     //printf("%u\n", avg_pending);
+    */
 
     _ready =  (this->prefetch_queue).has_request();
     /*
@@ -177,16 +216,19 @@ Request Prefetcher::getRequest(u_int32_t cycle) {
     req.fromCPU = false;
 
 
+    /*
     mem_start_time[mem_start_pos] = cycle;
     mem_start_pos++;
     if (mem_start_pos >= MAX_HEALTH_COUNT) {
         mem_start_pos = 0;
     }
+    */
     return req;
 }
 
 void Prefetcher::completeRequest(u_int32_t cycle) { 
 
+    /*
     mem_end_time[mem_end_pos] = cycle;
 
     mem_end_time[mem_end_pos] = cycle;
@@ -194,6 +236,7 @@ void Prefetcher::completeRequest(u_int32_t cycle) {
     if (mem_end_pos >= MAX_HEALTH_COUNT) {
         mem_end_pos = 0;
     }
+    */
 
 
     //_ready = false;
@@ -210,6 +253,7 @@ void Prefetcher::cpuRequest(Request req) {
 
 
 
+    //req.addr = trim_16(req.addr);
     addr = req.addr;
     cycle = req.issuedAt;
 
@@ -225,7 +269,8 @@ void Prefetcher::cpuRequest(Request req) {
         queue_item_t temp_item;
         int count;
 
-        req.addr = trim_16(req.addr);
+        //req.addr = trim_16(req.addr);
+        //req.addr = req.addr / 32 * 32;
         req.fromCPU = false;
 
 
@@ -236,7 +281,7 @@ void Prefetcher::cpuRequest(Request req) {
 
         int step;
         max_fetch_number = 8;
-        this->mem_queue.destroy();
+        //this->mem_queue.destroy();
         step = 0;
         int b_found;
         b_found = 0;
@@ -326,7 +371,19 @@ void Prefetcher::cpuRequest(Request req) {
             this->prefetch_queue.push(q_item);
         } 
         */
+
+
         this->prefetch_queue.recovery();
+        /*j
+        queue<queue_item_t> r_q;
+        queue_item_t t;
+        r_q = this->prefetch_queue.recovery();
+        while (!r_q.empty()){
+            t = r_q.front();
+            r_q.pop();
+            this->history.remove_addr(t.addr);
+        }
+        */
         return;
     } else {
         return;
@@ -334,16 +391,15 @@ void Prefetcher::cpuRequest(Request req) {
 
 }
 
+/*
 Predictor::Predictor()
 {
     int i, j;
     for (i=0; i<MAX_PREDS_TABLE; i++)
     {
         memset(&(preds[i]), 0, sizeof(prediction));
-        /*
         preds[i].pc = 0;
         preds[i].last_access = 0;
-        */
         for (j = 0; j < PREDICTION_NUM; j++){
             //preds[i].nextaddr[j] = (PREDICTION_NUM - j) * 32;
             preds[i].nextaddr[j] = 0;
@@ -352,22 +408,16 @@ Predictor::Predictor()
     this->prev_pc = 0;
     this->prev_addr = 0;
 }
+*/
 
 
 
+/*
 int Predictor::record(u_int32_t pc, u_int32_t addr, u_int32_t cycle, queue_item_t* q_items, Request req) {
     prediction* p; //p value
     p = 0;
 
-    /*
-    if (this->prev_pc == 0) {
-        //pass
-
-    }else{
-        //if (addr != this->prev_addr)
-    }
-    */
-    p = this->update(prev_pc, addr, cycle);
+    //p = this->update(prev_pc, addr, cycle);
 
     //this->prev_pc = pc;
     //this->prev_addr = addr;
@@ -379,8 +429,6 @@ int Predictor::record(u_int32_t pc, u_int32_t addr, u_int32_t cycle, queue_item_
     {
 
 
-//#define DEBUG 1
-#ifdef DEBUG
         printf("%x\n", p->pc);
         int i;
         printf("\n-------------\npc  =%x\n", p->pc);
@@ -395,7 +443,6 @@ int Predictor::record(u_int32_t pc, u_int32_t addr, u_int32_t cycle, queue_item_
             printf("%d,", p->count[i]);
         }
         printf("\n");
-#endif
 
         int it;
         for (it = 0; it< max_fetch_number; it++){
@@ -408,19 +455,19 @@ int Predictor::record(u_int32_t pc, u_int32_t addr, u_int32_t cycle, queue_item_
         return it + 1;
     }else{
         int stride;
-        /*
         max_fetch_number = 4;
         for (stride = 1; stride < max_fetch_number; stride++){
             (q_items[stride - 1]).addr = addr + stride * 32 ;
         }
-        */
         stride = 0;
         return stride;
     }
 
 
 }
+*/
 
+/*
 int sort(prediction* t){
     u_int32_t* nextaddr;
     int* count;
@@ -440,7 +487,9 @@ int sort(prediction* t){
     }
     return 0;
 }
+*/
 
+/*
 prediction* Predictor::update(u_int32_t pc, u_int32_t next_addr , u_int32_t cycle)
 {
     int i,j,appeared;
@@ -523,7 +572,6 @@ prediction* Predictor::update(u_int32_t pc, u_int32_t next_addr , u_int32_t cycl
     }
 
 
-    /*
     int k = 1;
     for (j = 0; j < PREDICTION_NUM; j++)
     {
@@ -534,13 +582,11 @@ prediction* Predictor::update(u_int32_t pc, u_int32_t next_addr , u_int32_t cycl
             k++;
         }
     }
-            */
 
     sort(&preds[i]);
     //prediction* p;
     //p = &preds[i];
 
-    /*
     printf("\n-------------\npc  =%x\n", p->pc);
     printf("\n-------------\nlast=%x\n", p->last_access);
     printf("nextaddr=");
@@ -553,13 +599,13 @@ prediction* Predictor::update(u_int32_t pc, u_int32_t next_addr , u_int32_t cycl
         printf("%d,", p->count[i]);
     }
     printf("\n");
-    */
 
 
     return &(preds[i]);
 
     
 }  
+*/
 
 
 /*void Predictor::update() {

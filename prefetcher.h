@@ -15,37 +15,37 @@
 
 
 
-#define MAX_QUEUE_SIZE 10
+#define MAX_QUEUE_SIZE 10 
 #include <queue>
 using namespace std;
 
+/* Not used
 #define MAX_PREDS_TABLE 100
 #define PREDICTION_NUM 4
 #define MAX_HEALTH_COUNT 30
-
 #define PREDICT_LENGTH 3
+*/
+
+/* Size = 4 + 4 = 8 Bytes*/
 typedef struct queue_item {
     u_int32_t addr;
     u_int32_t cycle;
-    bool HitL1;
-    bool HitL2;
+    //bool HitL1;
+    //bool HitL2;
 }queue_item_t;
 
+/* Not used
 typedef struct prediction_t {
 	u_int32_t nextaddr[PREDICTION_NUM];
 	int count[PREDICTION_NUM];
     u_int32_t pc;
     u_int32_t last_access;
 }prediction;
+*/
 
 
-	//size of (prediction) = (2 + 2) * PREDICTION_NUM + 4 + 4 
-//4 * PREDICTION_NUM + 4 + 4 = 32 Bytes
-
-//39KB / 32
-
-
-class Predictor{
+/* Not used
+class Predictor{ 
     private:
         u_int32_t prev_pc;
         u_int32_t prev_addr;
@@ -62,40 +62,36 @@ class Predictor{
     	//update the states inside predictor
         prediction*  update(u_int32_t pc, u_int32_t next_addr, u_int32_t cycle);
 };
+*/
 
 
-#define MAX_HISTORY_SIZE 40
-#define CPU_HISTROY_SIZE 20
+//48 best
+#define MAX_HISTORY_SIZE 48 
 
-#define BLOCK_L2 256 * 1024;
-#define BLOCK_L1 64 * 1024
 class HistoryLog{
     private:
         int pos;
-        u_int32_t addrs[MAX_HISTORY_SIZE];
-        u_int32_t cpu_addrs[CPU_HISTROY_SIZE];
+        u_int32_t addrs[MAX_HISTORY_SIZE]; //40 * 4 = 80 Bytes
     public:
         HistoryLog();
         int add_new(u_int32_t addr);
-        int add_cpu(u_int32_t addr);
+        int check_addr(u_int32_t addr);
+        int remove_addr(u_int32_t addr);
 };
 
 
-
-
-//4 * MAX_QUEUE_SIZE = 40 * 2 = 80 Bytes
-
-class Queue{
+class Queue{ // Size = MAX_QUEUE_SIZE * queue_size = 10 * 8 = 80 Bytes
     private:
         queue<queue_item_t> data; // MAX_QUEUE_SIZE
         queue<queue_item_t> temp; // MAX_QUEUE_SIZE, only for swap
+        
     public:
         Queue();
         int push(queue_item);
         queue_item_t pop(int index = 0);
         int has_request();
         int destroy();
-        int recovery();
+        queue<queue_item_t> recovery();
 };
 
 
@@ -103,22 +99,24 @@ class Prefetcher {
   private:
 
 	bool _ready;
-	Request _nextReq;
+	//Request _nextReq;
     //Fill the map?
     //
     Queue prefetch_queue;
-    Queue mem_queue;
-    Predictor predictor;
+    //Queue mem_queue;
+    //Predictor predictor;
 
     //u_int32_t issue_cycle;
-    u_int32_t last_issue;
-    u_int32_t last_complete_issue;
+    //u_int32_t last_issue;
+    //u_int32_t last_complete_issue;
 
+    /* Not used
     int mem_start_pos;
     int mem_end_pos;
     u_int32_t mem_start_time[MAX_HEALTH_COUNT];
     u_int32_t mem_end_time[MAX_HEALTH_COUNT];
     u_int32_t avg_prefetch_time;
+    */
 
     HistoryLog history;
   public:
