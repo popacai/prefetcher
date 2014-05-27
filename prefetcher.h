@@ -21,7 +21,7 @@ using namespace std;
 
 /* 4Bytes */
 typedef struct queue_item {
-    u_int32_t addr;
+    u_int32_t addr;                     
     //u_int32_t cycle;
     //bool HitL1;
     //bool HitL2;
@@ -32,8 +32,8 @@ typedef struct queue_item {
 
 class HistoryLog{
     private:
-        int pos;
-        u_int32_t addrs[MAX_HISTORY_SIZE]; //40 * 4 = 80 Bytes
+        int pos;                           //4 bytes
+        u_int32_t addrs[MAX_HISTORY_SIZE]; //48 * 4 = 192 Bytes
     public:
         HistoryLog();
         int add_new(u_int32_t addr);
@@ -42,7 +42,7 @@ class HistoryLog{
 };
 
 
-class Queue{ // Size = MAX_QUEUE_SIZE * queue_size = 10 * 8 = 80 Bytes
+class Queue{ // Size = MAX_QUEUE_SIZE * queue_size = 2 * 10 * 4 = 40 Bytes
     private:
         queue<queue_item_t> data; // MAX_QUEUE_SIZE
         queue<queue_item_t> temp; // MAX_QUEUE_SIZE, only for swap
@@ -57,14 +57,14 @@ class Queue{ // Size = MAX_QUEUE_SIZE * queue_size = 10 * 8 = 80 Bytes
 };
 
 
-class Prefetcher {
+class Prefetcher { // total => 282 Bytes
   private:
 
 	bool _ready;
     //
-    Queue prefetch_queue;
+    Queue prefetch_queue;   //80 Bytes
 
-    HistoryLog history;
+    HistoryLog history; // 192 Bytes
   public:
 	Prefetcher();
 
