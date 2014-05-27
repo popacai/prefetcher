@@ -15,55 +15,17 @@
 
 
 
-#define MAX_QUEUE_SIZE 10 
+#define MAX_QUEUE_SIZE 10
 #include <queue>
 using namespace std;
 
-/* Not used
-#define MAX_PREDS_TABLE 100
-#define PREDICTION_NUM 4
-#define MAX_HEALTH_COUNT 30
-#define PREDICT_LENGTH 3
-*/
-
-/* Size = 4 + 4 = 8 Bytes*/
+/* 4Bytes */
 typedef struct queue_item {
     u_int32_t addr;
-    u_int32_t cycle;
+    //u_int32_t cycle;
     //bool HitL1;
     //bool HitL2;
 }queue_item_t;
-
-/* Not used
-typedef struct prediction_t {
-	u_int32_t nextaddr[PREDICTION_NUM];
-	int count[PREDICTION_NUM];
-    u_int32_t pc;
-    u_int32_t last_access;
-}prediction;
-*/
-
-
-/* Not used
-class Predictor{ 
-    private:
-        u_int32_t prev_pc;
-        u_int32_t prev_addr;
-
-        prediction preds[MAX_PREDS_TABLE];
-
-    public:
-    	Predictor();
-    	//Every time accessing an address
-        void not_hit(u_int32_t pc, u_int32_t addr);
-
-    	int record(u_int32_t pc, u_int32_t addr, u_int32_t cycle, queue_item_t* q_items, Request req);
-
-    	//update the states inside predictor
-        prediction*  update(u_int32_t pc, u_int32_t next_addr, u_int32_t cycle);
-};
-*/
-
 
 //48 best
 #define MAX_HISTORY_SIZE 48 
@@ -99,24 +61,8 @@ class Prefetcher {
   private:
 
 	bool _ready;
-	//Request _nextReq;
-    //Fill the map?
     //
     Queue prefetch_queue;
-    //Queue mem_queue;
-    //Predictor predictor;
-
-    //u_int32_t issue_cycle;
-    //u_int32_t last_issue;
-    //u_int32_t last_complete_issue;
-
-    /* Not used
-    int mem_start_pos;
-    int mem_end_pos;
-    u_int32_t mem_start_time[MAX_HEALTH_COUNT];
-    u_int32_t mem_end_time[MAX_HEALTH_COUNT];
-    u_int32_t avg_prefetch_time;
-    */
 
     HistoryLog history;
   public:
